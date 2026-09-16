@@ -17,25 +17,44 @@ No web app or wrapper harness is required. The standard `hermes profile use ente
 
 ## Knowledge and capabilities
 
-The complete [production AI framework](https://github.com/cfollette18/production-ai-framework) is embedded in `agent.system_prompt` as 22 stable, identified, hashed records. One advisory skill is included and preloaded in the same prompt. No model-callable tools or MCP servers are enabled. Persistent memory injection is disabled; normal Hermes conversation/session behavior applies.
+The complete [production AI framework](https://github.com/cfollette18/production-ai-framework) is embedded in `agent.system_prompt` as 46 stable, identified, hashed records from three talks and the repository's implementation guidance. This includes coordination patterns, versioned state, handoff contracts, circuit breakers, Saga compensation, lexical retrieval with BM25 (k1 and b parameters), agentic search evaluation, and a transcript validation report. One advisory skill is included and preloaded in the same prompt. No model-callable tools or MCP servers are enabled. Persistent memory injection is disabled; normal Hermes conversation/session behavior applies.
 
 The advisor drafts and reviews architectures, project contracts, evaluation plans, data lifecycle designs, release criteria, and incident procedures. It cites knowledge IDs and identifies unsupported requests. Technical knowledge-only behavior and citation correctness are model instructions, not deterministic semantic guarantees. Native Hermes uses conversational output; citation semantics are not automatically verified. Operators can change configuration, so the profile is not an immutable security sandbox.
 
-The pack contains implementation guidance inspired by the talk, not an exhaustive transcript or vendor-specific deployment manual. Source provenance and limitations are included in the pack. Public distribution includes no transcript text, credentials, sessions, or customer data.
+The pack contains implementation guidance inspired by the talks, not exhaustive transcripts or a vendor-specific deployment manual. Source provenance and limitations are included in the pack. Public distribution includes no transcript text, credentials, sessions, or customer data.
 
 ## Refresh from the knowledge repository
 
-Clone both repositories side by side. Rebuild the framework exports with `python3 scripts/knowledge.py export` from its repository when you change its source files. With the profile already created, run:
+To install the snapshot from a checked-out profile repository, with the profile already created, run:
 
 ```bash
 ~/.hermes/hermes-agent/venv/bin/python refresh_profile.py
 ```
 
-Set `ADVISOR_KNOWLEDGE_ROOT` or `ADVISOR_HERMES_REPO` for different locations. This refreshes the local profile's policy, knowledge, skill, and capability configuration while preserving model settings and credentials. Start a new chat to load changes. Copy the refreshed sanitized config and knowledge pack into this distribution before publishing an update.
+This validates the packaged snapshot and prompt, then refreshes the local profile while preserving model settings, credentials, and sessions. The complete runtime prompt is atomically replaced last. Start a new chat to load changes. Set `ADVISOR_PROFILE_ROOT` or `ADVISOR_HERMES_REPO` for nonstandard locations. The script requires PyYAML (already installed in the local Hermes environment); standalone contributor environments can install requirements.txt.
+
+Maintainers adding knowledge should clone both repositories side by side, review source changes, regenerate and validate the framework exports, and commit the framework first. Then run from this repository:
+
+```bash
+~/.hermes/hermes-agent/venv/bin/python refresh_profile.py --package
+~/.hermes/hermes-agent/venv/bin/python validate_bundle.py
+~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests
+~/.hermes/hermes-agent/venv/bin/python refresh_profile.py
+```
+
+`--package` requires a clean framework checkout, checks its export against the committed file, and updates this repository's pack, prompt, and commit lock together. Set `ADVISOR_KNOWLEDGE_ROOT` for a different framework location. It uses the distribution's config, never the user's private config. Commit these generated distribution changes when publishing the update.
+
+## Autonomous updates and MCP
+
+MCP is an optional future access layer, not an updater or a replacement for Git. A small read-only server could expose framework search, get-by-ID, relationships, and revision metadata. Both that server and this profile should consume the same validated bundle. Keep snapshots pinned for a conversation so a knowledge change cannot silently change its authority halfway through.
+
+For unattended snapshot updates, use an external scheduled job: fetch a reviewed release of this repository, require passing CI, run `validate_bundle.py`, then run `refresh_profile.py`. Retain the previous distribution revision for rollback by reinstalling that version. The package builder checks integrity and commit consistency; it does not determine whether a commit was reviewed. Release selection and approval policy belong to the scheduler/operator. No background job or MCP server is installed by these scripts.
+
+Hermes' native profile updater preserves config.yaml by default. Since this advisor embeds knowledge in that file, copying a new knowledge-pack.json alone leaves old knowledge active. Run the refresh script after acquiring an updated distribution. It preserves local model settings; forcing replacement of the entire config does not provide that same preservation. Existing chats retain their prior context; open a new chat after refresh.
 
 ## Verification
 
-The native `hermes chat` path was tested for role, knowledge coverage, and handling unsupported cloud-price questions. Runtime tool resolution is checked separately. The refresh tool consumes the framework's public `dist/knowledge.json` contract and verifies bundle and record hashes. The installation retains source hashes for reproducibility. AI-generated recommendations still require appropriate review before implementation.
+The native `hermes chat` path is smoke-tested for knowledge coverage and unsupported requests. Runtime tool resolution is checked separately against the installed Hermes version. CI verifies record hashes, the commit lock format, exact prompt binding to policy/skill/knowledge, and capability settings; regression tests cover stale prompts, enabled tools, tampering, and preservation of local settings. These checks do not prove citation semantics or source truth. AI-generated recommendations still require appropriate review before implementation.
 
 ## Relationship to the framework
 

@@ -1,0 +1,8 @@
+name: enterprise-advisor
+version: 1.0.0
+author: cfollette18
+description: Framework-grounded enterprise AI planning advisor for the native Hermes CLI.
+env_requires:
+  - name: MINIMAX_API_KEY
+    description: MiniMax API key for model inference
+    required: true

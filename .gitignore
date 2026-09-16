@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.EXAMPLE
+auth.json
+sessions/
+memories/
+logs/
+*.db*
+__pycache__/
+.local/
